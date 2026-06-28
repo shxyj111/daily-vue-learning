@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <h1>📋 待办事项</h1>
+    <p class="tip">💡 数据来自后端，<a href="http://localhost:5000/admin" target="_blank">打开后台管理页面</a> 也能增删数据</p>
 
     <div class="input-area">
       <input
@@ -30,15 +31,27 @@ export default {
     return {
       todos: [],
       newTitle: "",
+      timer: null,
     };
   },
   created() {
     this.fetchTodos();
+    // 每 2 秒轮询后端，后端管理页面改了数据前端自动刷新
+    this.timer = setInterval(() => {
+      this.fetchTodos();
+    }, 2000);
+  },
+  beforeDestroy() {
+    clearInterval(this.timer);
   },
   methods: {
     async fetchTodos() {
-      const res = await axios.get("/api/todos");
-      this.todos = res.data.data;
+      try {
+        const res = await axios.get("/api/todos");
+        this.todos = res.data.data;
+      } catch (e) {
+        // 后端未启动时静默失败
+      }
     },
     async addTodo() {
       if (!this.newTitle.trim()) return;
@@ -74,8 +87,17 @@ body {
 }
 h1 {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
   color: #333;
+}
+.tip {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 20px;
+}
+.tip a {
+  color: #409eff;
 }
 .input-area {
   display: flex;
